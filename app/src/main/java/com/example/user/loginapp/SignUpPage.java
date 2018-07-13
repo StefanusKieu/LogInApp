@@ -1,24 +1,36 @@
 package com.example.user.loginapp;
 
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 public class SignUpPage extends AppCompatActivity implements View.OnClickListener {
 
@@ -28,9 +40,14 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
     private EditText editConfirmPassword;
     private EditText editUserName;
     private ProgressDialog progressDialog;
-
+    private TextView textUploadProfile;
+    private ImageButton imageProfile;
     private FirebaseAuth firebaseAuth;
     private DatabaseReference databaseReference;
+
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private Uri mImageUri;
+    private StorageReference mStorageRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,15 +62,45 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
             startActivity(new Intent(getApplicationContext(),MainActivity.class));
         }
         databaseReference = FirebaseDatabase.getInstance().getReference();
-
+        mStorageRef = FirebaseStorage.getInstance().getReference("profilepics");
 
         buttonContinue= (Button) findViewById(R.id.buttonContinue);
         editEmailAddress= (EditText) findViewById(R.id.editEmailAddress);
         editPassword= (EditText) findViewById(R.id.editPassword);
         editConfirmPassword= (EditText) findViewById(R.id.editConfirmPassword);
         editUserName= (EditText) findViewById(R.id.editUserName);
+        textUploadProfile = (TextView) findViewById(R.id.textUploadProfile);
+        imageProfile = (ImageButton) findViewById(R.id.imageProfile);
 
         buttonContinue.setOnClickListener(this);
+
+        textUploadProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openFileChooser();
+            }
+        });
+    }
+
+    private void openFileChooser(){
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(intent,PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode==PICK_IMAGE_REQUEST&&resultCode==RESULT_OK
+                &&data != null && data.getData()!=null){
+            mImageUri = data.getData();
+
+            Picasso.get().load(mImageUri).into(imageProfile);
+            //imageProfile.setImageURI(mImageUri);
+            imageProfile.setBackground(null);
+        }
     }
 
     private void registerUser(){
@@ -101,13 +148,36 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
     }
 
     private void saveUserInformation(){
-        String name = editUserName.getText().toString().trim();
-        String email = editEmailAddress.getText().toString().trim();
-        String password = editPassword.getText().toString().trim();
+        //String name = editUserName.getText().toString().trim();
+       // String email = editEmailAddress.getText().toString().trim();
+        //String password = editPassword.getText().toString().trim();
 
-        UserInformation userInformation = new UserInformation(name,email,password);
-        FirebaseUser user = firebaseAuth.getCurrentUser();
-        databaseReference.child(user.getUid()).setValue(userInformation);
+        StorageReference fileReference = mStorageRef.child(System.currentTimeMillis()
+        +"."+getFIleExtension(mImageUri));
+        fileReference.putFile(mImageUri)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                        UserInformation userInformation = new UserInformation(editUserName.getText().toString().trim(),
+                                editEmailAddress.getText().toString().trim(),
+                                editPassword.getText().toString().trim(),
+                                taskSnapshot.getDownloadUrl().toString());
+
+                        FirebaseUser user = firebaseAuth.getCurrentUser();
+                        databaseReference.child(user.getUid()).setValue(userInformation);
+
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(SignUpPage.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+
+
     }
 
     @Override
@@ -117,5 +187,10 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
         }
     }
 
+    private String getFIleExtension(Uri uri){
+        ContentResolver cR= getContentResolver();
+        MimeTypeMap mime= MimeTypeMap.getSingleton();
+        return mime.getExtensionFromMimeType(cR.getType(uri));
+    }
 
 }
