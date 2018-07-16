@@ -59,7 +59,7 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
         if (firebaseAuth.getCurrentUser()!=null)
         {
             finish();
-            startActivity(new Intent(getApplicationContext(),MainActivity.class));
+            startActivity(new Intent(getApplicationContext(),LoginPage.class));
         }
         databaseReference = FirebaseDatabase.getInstance().getReference();
         mStorageRef = FirebaseStorage.getInstance().getReference("profilepics");
@@ -138,8 +138,11 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
                         if (task.isSuccessful()){
                             Toast.makeText(SignUpPage.this,"Registered Successfully",Toast.LENGTH_SHORT).show();
                             saveUserInformation();
+
                             finish();
-                            startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                            startActivity(new Intent(SignUpPage.this, LoginPage.class));
+                            //finish();
+                            //startActivity(new Intent(getApplicationContext(),LoginPage.class));
                         }else{
                             Toast.makeText(SignUpPage.this,"Could not register.",Toast.LENGTH_SHORT).show();
                         }
@@ -162,7 +165,7 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
                         UserInformation userInformation = new UserInformation(editUserName.getText().toString().trim(),
                                 editEmailAddress.getText().toString().trim(),
                                 editPassword.getText().toString().trim(),
-                                taskSnapshot.getDownloadUrl().toString());
+                                taskSnapshot.getDownloadUrl().toString().trim());
 
                         FirebaseUser user = firebaseAuth.getCurrentUser();
                         databaseReference.child(user.getUid()).setValue(userInformation);

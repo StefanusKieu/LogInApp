@@ -30,10 +30,12 @@ public class LoginPage extends AppCompatActivity implements  View.OnClickListene
         setContentView(R.layout.activity_login_page);
 
         firebaseAuth = FirebaseAuth.getInstance();
+
         if (firebaseAuth.getCurrentUser()!=null)
         {
-            finish();
-            startActivity(new Intent(getApplicationContext(),MainActivity.class));
+            //firebaseAuth.signOut();
+            //finish();
+            //startActivity(new Intent(getApplicationContext(),MainActivity.class));
         }
         enterEmail= (EditText) findViewById(R.id.enterEmail);
         enterPassword= (EditText) findViewById(R.id.enterPassword);

@@ -1,14 +1,19 @@
 package com.example.user.loginapp;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,19 +30,17 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
-    private FirebaseAuth firebaseAuth;
+    private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-
     private Button buttonLogOut,buttonUpload;
     private TextView textUsername;
     private TextView textView;
     private ImageView imageUserProfilePic;
-
-    private DatabaseReference mDatabaseRef;
+    private DatabaseReference myRef;
     private FirebaseDatabase mFirebaseDatabase;
-    private EditText typingPlace1,typingPlace2;
-    private TextView showPlace1,showPlace2;
+    private EditText typingPlace1;
     private String userID;
+    private int i=1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,14 +48,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
 
-        firebaseAuth=FirebaseAuth.getInstance();
+        mAuth=FirebaseAuth.getInstance();
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        mDatabaseRef = mFirebaseDatabase.getReference();
-        if (firebaseAuth.getCurrentUser()==null){
+        myRef = mFirebaseDatabase.getReference();
+
+        if (mAuth.getCurrentUser()==null){
             finish();
             startActivity(new Intent(this, LoginPage.class));
         }
-        FirebaseUser user = firebaseAuth.getCurrentUser();
+        FirebaseUser user = mAuth.getCurrentUser();
         userID = user.getUid();
 
         buttonLogOut = (Button) findViewById(R.id.buttonLogOut);
@@ -78,30 +82,114 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         };
 
+        // Read from the database
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Object value = dataSnapshot.getValue();
+                showData(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+               }
+        });
+
+        buttonUpload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                i++;
+                if (i%2==0){
+                typingPlace1.setEnabled(true);
+                //typingPlace1.setBackgroundResource(R.drawable.custom_edit_text_bg);
+                typingPlace1.setBackgroundResource(android.R.color.white);
+                buttonUpload.setText("Save change");
+                }
+                else{
+                    typingPlace1.setEnabled(false);
+                    typingPlace1.setBackgroundResource(android.R.color.transparent);
+
+                    buttonUpload.setText("CHANGE USERNAME");
+
+                    String newValue = typingPlace1.getText().toString();
+                    //String newAttribute="Age";
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    userID = user.getUid();
+
+                    //Updating like a boss!
+                    myRef.child(userID).child("name").setValue(newValue);
+                }
+
+            }
+        });
+
         //userInfo.getImageUrl(); //A String. To get profilepic URL
         //LoadImageFromWebOperations(userInfo.getImageUrl()); //A Drawable. To Load Image from URL
         //imageUserProfilePic.setBackground(LoadImageFromWebOperations(userInfo.getImageUrl())); //Set the backgroundimage of ImageView to URL 's image.
         //imageUserProfilePic.setBackground(LoadImageFromWebOperations(userInfo.mImageUrl));
 
         typingPlace1= (EditText) findViewById(R.id.typingPlace1);
-        typingPlace2= (EditText) findViewById(R.id.typingPlace2);
-        showPlace1= (TextView) findViewById(R.id.showPlace1);
-        showPlace2= (TextView) findViewById(R.id.showPlace2);
+
+
+
+
 
 
     }
 
-    private void showData(DataSnapshot dataSnapShot){
-        for (DataSnapshot ds:dataSnapShot.getChildren()){
-            UserInformation userInfo= new UserInformation();
+    private void showData(DataSnapshot dataSnapshot){
+            UserInformation uInfo = new UserInformation();
 
-            //userInfo.setName(ds.child(userID).getValue(UserInformation.class).getName());
-            //userInfo.setEmail(ds.child(userID).getValue(UserInformation.class).getEmail());
+            uInfo.setName(dataSnapshot.child(userID).getValue(UserInformation.class).getName()); //set the name
+            uInfo.setEmail(dataSnapshot.child(userID).getValue(UserInformation.class).getEmail()); //set the email
+            uInfo.setImageUrl(dataSnapshot.child(userID).getValue(UserInformation.class).getImageUrl());
 
-            showPlace1.setText(ds.child(userID).getValue(UserInformation.class).getName());
-            showPlace2.setText(ds.child(userID).getValue(UserInformation.class).getEmail());
+            String text=uInfo.getName();
+            final String ip=uInfo.getImageUrl();
+
+            typingPlace1.setText(text);
+            new DownLoadImageTask(imageUserProfilePic).execute(ip);
+
+
+    }
+
+    private class DownLoadImageTask extends AsyncTask<String,Void,Bitmap> {
+        ImageView imageView;
+
+        public DownLoadImageTask(ImageView imageView){
+            this.imageView = imageView;
+        }
+
+        /*
+            doInBackground(Params... params)
+                Override this method to perform a computation on a background thread.
+         */
+        protected Bitmap doInBackground(String...urls){
+            String urlOfImage = urls[0];
+            Bitmap logo = null;
+            try{
+                InputStream is = new URL(urlOfImage).openStream();
+                /*
+                    decodeStream(InputStream is)
+                        Decode an input stream into a bitmap.
+                 */
+                logo = BitmapFactory.decodeStream(is);
+            }catch(Exception e){ // Catch the download exception
+                e.printStackTrace();
+            }
+            return logo;
+        }
+
+        /*
+            onPostExecute(Result result)
+                Runs on the UI thread after doInBackground(Params...).
+         */
+        protected void onPostExecute(Bitmap result){
+            imageView.setImageBitmap(result);
         }
     }
+
 
     public static Drawable LoadImageFromWebOperations(String url) {
         try {
@@ -118,14 +206,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         if (view==buttonLogOut){
-            firebaseAuth.signOut();
+            mAuth.signOut();
             finish();
             startActivity(new Intent(this, LoginPage.class));
-        }
-        if (view==buttonUpload){
-            //UserInformation userInformation = new UserInformation(getName.getText().toString().trim(),
-            //getEmail.getText().toString().trim(),"empty","empty");
-            //mDatabaseRef.child(user.getUid()).setValue(userInformation);
         }
     }
 
@@ -133,14 +216,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onStart() {
         super.onStart();
-        firebaseAuth.addAuthStateListener(mAuthListener);
+        mAuth.addAuthStateListener(mAuthListener);
     }
 
     @Override
     public void onStop() {
         super.onStop();
         if (mAuthListener != null) {
-            firebaseAuth.removeAuthStateListener(mAuthListener);
+            mAuth.removeAuthStateListener(mAuthListener);
         }
     }
 }

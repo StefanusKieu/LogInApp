@@ -5,7 +5,7 @@ public class UserInformation {
     public String name;
     public String email;
     public String password;
-    public String mImageUrl;
+    public String imageUrl;
 
     public UserInformation(){
             //jangan delete
@@ -15,15 +15,15 @@ public class UserInformation {
         this.name=name;
         this.email=email;
         this.password=password;
-        this.mImageUrl=imageUrl;//Maybe I don't need this line
+        this.imageUrl=imageUrl;//Maybe I don't need this line
     }
 
-    public String getImageUrl(){
-        return mImageUrl;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setImageUrl (String imageUrl){
-        mImageUrl = imageUrl;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getName(){
