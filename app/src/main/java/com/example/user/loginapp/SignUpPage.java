@@ -48,11 +48,15 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
     private static final int PICK_IMAGE_REQUEST = 1;
     private Uri mImageUri;
     private StorageReference mStorageRef;
+    private boolean gotPicture=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_page);
+
+        //String haha = "https://firebasestorage.googleapis.com/v0/b/easylogin-15814.appspot.com/o/profilepics%2F1531794669031.png?alt=media&token=24b1e22e-6a45-4274-8644-b4222c4c5c64";
+        //mImageUri = Uri.parse(haha);
 
         progressDialog = new ProgressDialog(this);
         firebaseAuth = FirebaseAuth.getInstance();
@@ -100,6 +104,7 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
             Picasso.get().load(mImageUri).into(imageProfile);
             //imageProfile.setImageURI(mImageUri);
             imageProfile.setBackground(null);
+            gotPicture = true;
         }
     }
 
@@ -124,6 +129,11 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
         }
         if(!password.equals(confirmPassword)){
             Toast.makeText(this,"The password and confirmation password do not match. Please make sure they match.",Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if(gotPicture==false){
+            Toast.makeText(this,"Please choose a profile picture. You can remove it later if you wish.",Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -170,12 +180,13 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
                         FirebaseUser user = firebaseAuth.getCurrentUser();
                         databaseReference.child(user.getUid()).setValue(userInformation);
 
+
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(SignUpPage.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(SignUpPage.this, e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
 
