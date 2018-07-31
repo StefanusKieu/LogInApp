@@ -36,16 +36,15 @@
             android:textColor="#000000"
             android:textSize="15sp" />
 
-        <ImageButton
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/imageProfile"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:scaleType="fitXY"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="80dp"
-            android:background="@drawable/profilepic" />
+            android:background="@drawable/profilepic"/>
 
         <TextView
             android:id="@+id/textUploadProfile"

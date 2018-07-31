@@ -39,6 +39,8 @@ import com.squareup.picasso.Picasso;
 import java.io.InputStream;
 import java.net.URL;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     private FirebaseAuth mAuth;
@@ -46,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button buttonLogOut,buttonUpload,buttonChangePic,buttonRemovePic;
     private TextView textUsername,sideUsername;
     private TextView textView;
-    private ImageView imageUserProfilePic,sideProfilePic;
+    private CircleImageView imageUserProfilePic,sideProfilePic;
     private DatabaseReference myRef;
     private FirebaseDatabase mFirebaseDatabase;
     private EditText typingPlace1;
@@ -80,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         buttonRemovePic = (Button) findViewById(R.id.buttonRemovePic);
         textUsername = (TextView) findViewById(R.id.textUsername);
         textView = (TextView) findViewById(R.id.textView);
-        imageUserProfilePic = (ImageView) findViewById(R.id.imageUserProfilePic);
+        imageUserProfilePic = (CircleImageView) findViewById(R.id.imageUserProfilePic);
         textUsername.setText(user.getEmail());
         buttonLogOut.setOnClickListener(this);
         buttonUpload.setOnClickListener(this);
@@ -178,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
             View hView =  navigationView.getHeaderView(0);
-            ImageView sideProfilePic = (ImageView) hView.findViewById(R.id.sideProfilePic);
+            ImageView sideProfilePic = (CircleImageView) hView.findViewById(R.id.sideProfilePic);
             new DownLoadImageTask(sideProfilePic).execute(ip);
     }
 
@@ -300,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 &&data != null && data.getData()!=null){
             mImageUri = data.getData();
 
-            Picasso.get().load(mImageUri).into(imageUserProfilePic);
+            Picasso.get().load(mImageUri).noFade().into(imageUserProfilePic);
             //imageProfile.setImageURI(mImageUri);
             imageUserProfilePic.setBackground(null);
         }

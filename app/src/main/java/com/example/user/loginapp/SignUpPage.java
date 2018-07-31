@@ -14,6 +14,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +33,8 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class SignUpPage extends AppCompatActivity implements View.OnClickListener {
 
     private Button buttonContinue;
@@ -41,7 +44,7 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
     private EditText editUserName;
     private ProgressDialog progressDialog;
     private TextView textUploadProfile;
-    private ImageButton imageProfile;
+    private CircleImageView imageProfile;
     private FirebaseAuth firebaseAuth;
     private DatabaseReference databaseReference;
 
@@ -74,7 +77,7 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
         editConfirmPassword= (EditText) findViewById(R.id.editConfirmPassword);
         editUserName= (EditText) findViewById(R.id.editUserName);
         textUploadProfile = (TextView) findViewById(R.id.textUploadProfile);
-        imageProfile = (ImageButton) findViewById(R.id.imageProfile);
+        imageProfile = (CircleImageView) findViewById(R.id.imageProfile);
 
         buttonContinue.setOnClickListener(this);
 
@@ -101,7 +104,8 @@ public class SignUpPage extends AppCompatActivity implements View.OnClickListene
                 &&data != null && data.getData()!=null){
             mImageUri = data.getData();
 
-            Picasso.get().load(mImageUri).into(imageProfile);
+
+            Picasso.get().load(mImageUri).noFade().into(imageProfile);
             //imageProfile.setImageURI(mImageUri);
             imageProfile.setBackground(null);
             gotPicture = true;
